@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강화학습 체험 시뮬레이터 — DeepRacer 수업용</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: '맑은 고딕', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+    line-height: 1.6;
+    padding: 24px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 24px; }
+  h1 { color: #1F3864; font-size: 28px; margin-bottom: 8px; letter-spacing: 0; }
+  .subtitle { color: #6b7280; font-size: 14px; }
+  .icon-sprite { display: none; }
+  .icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    stroke: currentColor;
+  }
+
+  .intro-banner {
+    background: #eef6ff;
+    color: #1f2937;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #2563eb;
+    padding: 20px 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .intro-banner strong { color: #0f766e; }
+  .intro-banner .big {
+    color: #1F3864;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .grid-container {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .grid-title { font-size: 14px; font-weight: 600; color: #4b5563; }
+  canvas#grid {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    max-width: 100%;
+    height: auto;
+  }
+  .grid-legend {
+    display: flex; gap: 16px;
+    font-size: 13px; color: #6b7280;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .legend-dot.agent { background: #3b82f6; }
+  .legend-dot.goal { background: #22c55e; border-radius: 4px; }
+  .legend-dot.wall { background: #6b7280; border-radius: 4px; }
+  .legend-dot.arrow { background: transparent; color: #1F3864; font-weight: bold; width: auto; }
+  .legend-hit {
+    color: #dc2626;
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .legend-line {
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    background: rgba(245,158,11,0.7);
+    border-radius: 2px;
+  }
+  .grid-note, .note {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .grid-note {
+    max-width: 560px;
+    text-align: center;
+  }
+
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .panel h3 {
+    font-size: 14px;
+    color: #1F3864;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .stat-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+  }
+  .stat-row:last-child { border: none; }
+  .stat-label { color: #6b7280; }
+  .stat-value { font-weight: 600; color: #1f2937; }
+
+	  .btn {
+	    width: 100%;
+	    padding: 10px 16px;
+	    border: none;
+	    border-radius: 8px;
+	    font-size: 14px;
+	    font-weight: 500;
+	    cursor: pointer;
+	    transition: all 0.15s;
+	    font-family: inherit;
+	    margin-bottom: 8px;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    gap: 8px;
+	  }
+  .btn-primary { background: #1F3864; color: white; }
+  .btn-primary:hover { background: #2E5C8A; }
+  .btn-secondary { background: #e0e7ff; color: #3730a3; }
+  .btn-secondary:hover { background: #c7d2fe; }
+  .btn-danger { background: #fee2e2; color: #b91c1c; }
+  .btn-danger:hover { background: #fecaca; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .slider-group { margin-bottom: 12px; }
+  .slider-label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: #4b5563;
+    margin-bottom: 4px;
+  }
+  .slider-label .value { font-weight: 600; color: #1F3864; }
+  .slider {
+    width: 100%; height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: #1F3864;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: #1F3864;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+  }
+  .warning {
+    font-size: 12px; color: #92400e;
+    margin-top: 8px;
+    padding: 8px;
+    background: #fef3c7;
+    border-radius: 6px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .graph-container {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .graph-title {
+    font-size: 14px;
+    color: #1F3864;
+    margin-bottom: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  canvas#rewardGraph { width: 100%; height: 200px; }
+
+  .activities {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .activities h2 {
+    font-size: 18px;
+    color: #1F3864;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .activity-card {
+    border-left: 4px solid #1F3864;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .activity-card.discovery { border-left-color: #f59e0b; background: #fffbeb; }
+  .activity-card .num { font-weight: 700; color: #1F3864; font-size: 13px; }
+  .activity-card.discovery .num { color: #92400e; }
+  .activity-card .title { font-weight: 600; margin: 4px 0; }
+  .activity-card .desc { font-size: 13px; color: #4b5563; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: #fef3c7;
+    color: #92400e;
+    margin-right: 4px;
+  }
+
+  @media (max-width: 880px) {
+    .main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-alert" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.4L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+  </symbol>
+  <symbol id="icon-book" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path>
+  </symbol>
+  <symbol id="icon-chart" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-5"></path><path d="M12 16V8"></path><path d="M16 16v-3"></path>
+  </symbol>
+  <symbol id="icon-dice" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8.5 8.5h.01"></path><path d="M15.5 8.5h.01"></path><path d="M8.5 15.5h.01"></path><path d="M15.5 15.5h.01"></path>
+  </symbol>
+  <symbol id="icon-line-chart" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19V5"></path><path d="M4 19h16"></path><path d="m7 15 4-4 3 3 5-7"></path>
+  </symbol>
+  <symbol id="icon-play" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 5v14l11-7Z"></path>
+  </symbol>
+  <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 11a8 8 0 0 0-14.7-4.4L4 8"></path><path d="M4 4v4h4"></path><path d="M4 13a8 8 0 0 0 14.7 4.4L20 16"></path><path d="M20 20v-4h-4"></path>
+  </symbol>
+  <symbol id="icon-reset" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v6h6"></path>
+  </symbol>
+  <symbol id="icon-route" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="M8 6h4a4 4 0 0 1 0 8H9a3 3 0 0 0 0 6h7"></path>
+  </symbol>
+  <symbol id="icon-sliders" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6h10"></path><path d="M18 6h2"></path><path d="M4 12h2"></path><path d="M10 12h10"></path><path d="M4 18h7"></path><path d="M15 18h5"></path><circle cx="16" cy="6" r="2"></circle><circle cx="8" cy="12" r="2"></circle><circle cx="13" cy="18" r="2"></circle>
+  </symbol>
+  <symbol id="icon-target" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M2 12h3"></path><path d="M19 12h3"></path>
+  </symbol>
+</svg>
+<div class="container">
+  <header>
+    <h1>강화학습 체험 시뮬레이터</h1>
+    <p class="subtitle">DeepRacer 학습 원리를 5분 안에 이해하기 — 디지털새싹 캠프 1차시 보조 자료</p>
+  </header>
+
+  <div class="intro-banner">
+    <div class="big">자동차가 목표까지 가는 법을 <strong>스스로 배웁니다</strong></div>
+    사람이 "여기로 가" 하고 가르치지 않습니다. 자동차가 시도해 보고, 잘하면 보상을 받고, 잘 못하면 페널티를 받습니다. 이걸 반복하면 점점 똑똑해집니다. <strong>이게 강화학습입니다.</strong>
+  </div>
+
+  <div class="main">
+    <div class="grid-container">
+      <div class="grid-title">시뮬레이션 화면 (8 × 8 격자)</div>
+      <canvas id="grid" width="480" height="480"></canvas>
+      <div class="grid-legend">
+        <div class="legend-item"><div class="legend-dot agent"></div>자동차 (에이전트)</div>
+        <div class="legend-item"><div class="legend-dot goal"></div>목표</div>
+        <div class="legend-item"><div class="legend-dot wall"></div>벽 (장애물)</div>
+        <div class="legend-item"><span class="legend-hit">×</span>충돌 위치</div>
+        <div class="legend-item"><span class="legend-line"></span>학습 중 경로</div>
+        <div class="legend-item"><span style="color:#1F3864;font-weight:bold;">↑→↓←</span> 학습된 최선 행동</div>
+      </div>
+      <div class="grid-note">빨간 ×는 최근 에피소드에서 부딪힌 위치이고, 옆의 작은 빨간 숫자는 같은 위치에서 반복 충돌한 횟수입니다.</div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel">
+        <h3><svg class="icon"><use href="#icon-chart"></use></svg>통계</h3>
+        <div class="stat-row">
+          <span class="stat-label">총 학습 횟수</span>
+          <span class="stat-value" id="stat-episodes">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">최근 보상</span>
+          <span class="stat-value" id="stat-last-reward">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">최근 걸음 수</span>
+          <span class="stat-value" id="stat-last-steps">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">최근 충돌 수</span>
+          <span class="stat-value" id="stat-last-hits">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">최근 10회 평균 보상</span>
+          <span class="stat-value" id="stat-avg-reward">—</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3><svg class="icon"><use href="#icon-play"></use></svg>컨트롤</h3>
+        <button class="btn btn-secondary" id="btn-random"><svg class="icon"><use href="#icon-dice"></use></svg><span>무작위로 1번 시도</span></button>
+        <button class="btn btn-primary" id="btn-train-10"><svg class="icon"><use href="#icon-line-chart"></use></svg><span>10번 학습</span></button>
+        <button class="btn btn-primary" id="btn-train-100"><svg class="icon"><use href="#icon-line-chart"></use></svg><span>100번 학습</span></button>
+        <button class="btn btn-secondary" id="btn-policy"><svg class="icon"><use href="#icon-route"></use></svg><span>학습된 정책으로 1번 시도</span></button>
+        <button class="btn btn-danger" id="btn-reset"><svg class="icon"><use href="#icon-reset"></use></svg><span>초기화 (학습 지우기)</span></button>
+      </div>
+
+      <div class="panel">
+        <h3><svg class="icon"><use href="#icon-sliders"></use></svg>보상 함수 (조정 가능)</h3>
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>목표 도달 보상 <span style="color:#9ca3af;font-size:11px;font-weight:400;">기본 +100</span></span>
+            <span class="value" id="val-goal">+100</span>
+          </div>
+          <input type="range" min="-100" max="200" value="100" class="slider" id="slider-goal">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>벽 부딪힘 보상/페널티 <span style="color:#9ca3af;font-size:11px;font-weight:400;">기본 -10</span></span>
+            <span class="value" id="val-wall">-10</span>
+          </div>
+          <input type="range" min="-50" max="10" value="-10" class="slider" id="slider-wall">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>한 걸음 보상/페널티 <span style="color:#9ca3af;font-size:11px;font-weight:400;">기본 -1</span></span>
+            <span class="value" id="val-step">-1</span>
+          </div>
+          <input type="range" min="-10" max="10" value="-1" step="0.5" class="slider" id="slider-step">
+        </div>
+        <button class="btn btn-secondary" id="btn-restore-rewards" style="margin-top:8px;font-size:13px;"><svg class="icon"><use href="#icon-refresh"></use></svg><span>보상 함수만 기본값으로 복원</span></button>
+        <div class="warning">
+          <svg class="icon"><use href="#icon-alert"></use></svg>
+          <span>보상 함수를 바꾸면 "초기화" 후 다시 학습시켜야 효과가 보입니다. 벽/걸음 페널티가 0이어도 목표 +100이 있으면 길을 찾을 수 있고, 벽이나 걸음에 양수 보상을 주면 점수 벌이 행동을 배울 수 있습니다. <strong>빨간색 값</strong>은 기본값에서 변경된 슬라이더입니다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graph-container">
+    <div class="graph-title"><svg class="icon"><use href="#icon-line-chart"></use></svg>보상 그래프 — 학습이 진행될수록 보상이 어떻게 변할까?</div>
+    <canvas id="rewardGraph" width="1100" height="200"></canvas>
+    <div class="note" style="margin-top:8px;">
+      이 그래프는 DeepRacer 콘솔의 보상 그래프와 같은 모양입니다. 우상향이면 학습이 잘 되는 중이라는 뜻이에요.
+    </div>
+  </div>
+
+  <div class="activities">
+    <h2><svg class="icon"><use href="#icon-book"></use></svg>수업 활용 가이드 — 1차시 12~15분 활동</h2>
+
+    <div class="activity-card">
+      <div class="num">활동 1</div>
+      <div class="title"><span class="badge">2분</span> 무작위 시도 관찰</div>
+      <div class="desc">"무작위로 1번 시도" 버튼을 3~5번 누릅니다. 자동차가 거의 깃발에 도달하지 못함을 확인. → <strong>"학습이 없으면 이렇다"</strong>는 체감.</div>
+    </div>
+
+    <div class="activity-card">
+      <div class="num">활동 2</div>
+      <div class="title"><span class="badge">3분</span> 학습 시키기 — 학습 과정 관찰</div>
+      <div class="desc">"100번 학습" 버튼을 1~2번 누릅니다. <strong>주황색 선</strong>(자동차가 방금 시도한 경로)이 초반엔 지그재그로 헤매다가 점점 직선에 가까워지는 모습 관찰. 칸에 그려지는 <strong>화살표</strong>(학습된 최선 행동)도 차근차근 진화. 보상 그래프도 우상향. 학습 후 "학습된 정책으로 1번 시도"로 깨끗하게 확인.</div>
+    </div>
+
+    <div class="activity-card">
+      <div class="num">활동 3</div>
+      <div class="title"><span class="badge">3분</span> 보상 바꾸기 — 벽을 보상으로 주기</div>
+      <div class="desc"><strong>먼저 "보상 함수만 기본값으로 복원"</strong> 클릭(다른 슬라이더가 변경되어 있을 수 있음) → "초기화" → 슬라이더로 <strong>"벽 부딪힘 보상/페널티"를 +5로</strong> (한 걸음 보상/페널티는 -1 유지!) → "100번 학습" → 결과 관찰. 자동차가 깃발보다 <strong>벽을 치며 점수를 버는 행동</strong>을 선호함. → 보상 함수가 잘못 설계되면 의도와 다른 행동을 배운다는 발견.</div>
+    </div>
+
+    <div class="activity-card">
+      <div class="num">확장 활동</div>
+      <div class="title"><span class="badge">2분</span> 보상 해킹 — 걸음마다 점수 주기</div>
+      <div class="desc"><strong>먼저 "보상 함수만 기본값으로 복원"</strong> 클릭 → "초기화" → 슬라이더로 <strong>"한 걸음 보상/페널티"를 +5로</strong> → "100번 학습" → 결과 관찰. 목표에 도착하면 에피소드가 끝나므로, 자동차가 <strong>빨리 끝내기보다 움직이며 점수를 더 벌려는 행동</strong>을 보일 수 있음. → 보상 함수는 의도가 아니라 숫자로 적힌 이득을 최대로 만든다는 발견.</div>
+    </div>
+
+    <div class="activity-card">
+      <div class="num">활동 4</div>
+      <div class="title"><span class="badge">3분</span> 보상 바꾸기 — 목표 보상을 음수로</div>
+      <div class="desc"><strong>먼저 "보상 함수만 기본값으로 복원"</strong> 클릭 → "초기화" → 슬라이더로 <strong>"목표 도달 보상"만 -100으로</strong> (왼쪽 끝, 다른 슬라이더는 기본값 유지!) → "100번 학습" → 학습된 정책으로 시도. 자동차가 깃발 쪽이 아니라 <strong>반대 방향으로 도망</strong>! 보상이 음수면 자동차에겐 "피해야 할 것"이 됨. → <strong>보상의 부호(+/−)가 행동을 완전히 뒤집는다</strong>는 발견.</div>
+    </div>
+
+    <div class="activity-card discovery">
+      <div class="num">핵심 발견 정리</div>
+      <div class="title"><span class="badge" style="background:#fef3c7;color:#92400e;">3분</span> 학생과 함께 정리</div>
+      <div class="desc">
+        <strong>① 학습 없으면 무작위, 학습 후엔 똑똑</strong> — 강화학습의 기본 원리.<br>
+        <strong>② 보상은 행동의 이유</strong> — 페널티를 0으로 만든다고 항상 망가지지는 않지만, 벽이나 걸음에 보상을 주면 자동차는 점수 버는 행동을 배움 (활동 3, 확장 활동).<br>
+        <strong>③ 보상 해킹이 생길 수 있음</strong> — 우리가 바란 행동이 아니라 숫자로 가장 이득인 행동을 배움. 보상 함수 설계가 행동을 만든다.<br>
+        <strong>④ 보상의 부호가 행동을 결정</strong> — 양수면 다가가고, 음수면 도망감 (활동 4).<br>
+        <strong>⑤ DeepRacer도 똑같이 작동한다</strong> — 트랙 위 자동차가 보상 함수에 따라 학습. 이제 다음 차시에서 콘솔로 직접 해 보자!
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ 시뮬레이터 코드 ============
+
+const GRID_W = 8, GRID_H = 8;
+const CELL = 60;
+const START = { x: 0, y: 7 };
+const GOAL = { x: 7, y: 0 };
+const OBSTACLES = [
+  {x: 2, y: 2}, {x: 3, y: 2}, {x: 4, y: 2},
+  {x: 5, y: 4}, {x: 5, y: 5}, {x: 1, y: 5}
+];
+
+const ACTIONS = [
+  {dx: 0, dy: -1, sym: '↑'},
+  {dx: 1, dy: 0, sym: '→'},
+  {dx: 0, dy: 1, sym: '↓'},
+  {dx: -1, dy: 0, sym: '←'}
+];
+
+let Q = [];
+let episodes = 0;
+let rewardHistory = [];
+let agentPos = {...START};
+let path = [];
+let lastTrainingPath = [];  // 마지막 학습 에피소드의 경로 (시각화용)
+let lastHitCells = [];      // 최근 에피소드에서 벽에 부딪힌 위치
+
+const rewards = {
+  goal: 100,
+  obstacle: -10,
+  step: -1
+};
+
+const canvas = document.getElementById('grid');
+const ctx = canvas.getContext('2d');
+const graphCanvas = document.getElementById('rewardGraph');
+const graphCtx = graphCanvas.getContext('2d');
+
+function setupCanvas() {
+  canvas.width = GRID_W * CELL;
+  canvas.height = GRID_H * CELL;
+  // graph canvas: use actual rendered width
+  graphCanvas.width = graphCanvas.offsetWidth;
+  graphCanvas.height = 200;
+}
+
+function initQ() {
+  Q = [];
+  for (let x = 0; x < GRID_W; x++) {
+    Q.push([]);
+    for (let y = 0; y < GRID_H; y++) {
+      Q[x].push([0, 0, 0, 0]);
+    }
+  }
+}
+
+function isObstacle(x, y) {
+  return OBSTACLES.some(o => o.x === x && o.y === y);
+}
+
+function isValid(x, y) {
+  return x >= 0 && x < GRID_W && y >= 0 && y < GRID_H && !isObstacle(x, y);
+}
+
+function step(x, y, action) {
+  const a = ACTIONS[action];
+  const nx = x + a.dx;
+  const ny = y + a.dy;
+
+  if (!isValid(nx, ny)) {
+    const hitCell = (nx >= 0 && nx < GRID_W && ny >= 0 && ny < GRID_H)
+      ? { x: nx, y: ny }
+      : { x, y };
+    return { x, y, r: rewards.obstacle, done: false, hit: true, hitCell };
+  }
+  if (nx === GOAL.x && ny === GOAL.y) {
+    return { x: nx, y: ny, r: rewards.goal, done: true };
+  }
+  return { x: nx, y: ny, r: rewards.step, done: false };
+}
+
+function chooseAction(x, y, epsilon) {
+  if (Math.random() < epsilon) {
+    return Math.floor(Math.random() * 4);
+  }
+  const q = Q[x][y];
+  const maxQ = Math.max(...q);
+  // Q값이 동률인 행동들을 모두 찾아 무작위 선택 (걸음 페널티 0일 때 빙빙 도는 효과)
+  const bestActions = [];
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(q[i] - maxQ) < 1e-6) bestActions.push(i);
+  }
+  return bestActions[Math.floor(Math.random() * bestActions.length)];
+}
+
+function trainEpisode() {
+  let x = START.x, y = START.y;
+  let totalR = 0;
+  let steps = 0;
+  let hits = 0;
+  const hitCells = [];
+  const maxSteps = 100;
+  const alpha = 0.3;
+  const gamma = 1.0;  // 할인 없음 — 걸음 페널티가 단축 압력의 유일한 원천이 되도록
+  const epsilon = 0.2;
+  const trainedPath = [{x, y}];
+
+  for (let s = 0; s < maxSteps; s++) {
+    const a = chooseAction(x, y, epsilon);
+    const { x: nx, y: ny, r, done, hit, hitCell } = step(x, y, a);
+
+    const maxNextQ = Math.max(...Q[nx][ny]);
+    Q[x][y][a] += alpha * (r + gamma * maxNextQ - Q[x][y][a]);
+
+    totalR += r;
+    if (hit) {
+      hits++;
+      hitCells.push(hitCell);
+    }
+    x = nx; y = ny;
+    trainedPath.push({x, y});
+    steps++;
+
+    if (done) break;
+  }
+
+  episodes++;
+  rewardHistory.push(totalR);
+  if (rewardHistory.length > 500) rewardHistory.shift();
+  return { totalR, steps, hits, hitCells, path: trainedPath };
+}
+
+// ============ 시각화 ============
+
+function drawGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let x = 0; x < GRID_W; x++) {
+    for (let y = 0; y < GRID_H; y++) {
+      ctx.fillStyle = (x + y) % 2 === 0 ? '#fafafa' : '#f3f4f6';
+      ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.strokeRect(x * CELL, y * CELL, CELL, CELL);
+    }
+  }
+
+  // Q-value arrows
+  for (let x = 0; x < GRID_W; x++) {
+    for (let y = 0; y < GRID_H; y++) {
+      if (isObstacle(x, y)) continue;
+      if (x === GOAL.x && y === GOAL.y) continue;
+      const q = Q[x][y];
+      const maxQ = Math.max(...q);
+      if (maxQ === 0) continue;
+      const bestA = q.indexOf(maxQ);
+      const cx = x * CELL + CELL/2;
+      const cy = y * CELL + CELL/2;
+
+      ctx.fillStyle = 'rgba(31, 56, 100, 0.4)';
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ACTIONS[bestA].sym, cx, cy);
+    }
+  }
+
+  // Obstacles
+  ctx.fillStyle = '#6b7280';
+  OBSTACLES.forEach(o => {
+    ctx.fillRect(o.x * CELL + 2, o.y * CELL + 2, CELL - 4, CELL - 4);
+  });
+
+  // Start cell highlight
+  ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(START.x * CELL + 3, START.y * CELL + 3, CELL - 6, CELL - 6);
+  ctx.fillStyle = 'rgba(59, 130, 246, 0.7)';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('START', START.x * CELL + CELL/2, START.y * CELL + 12);
+
+  // Goal
+  ctx.fillStyle = '#dcfce7';
+  ctx.fillRect(GOAL.x * CELL + 2, GOAL.y * CELL + 2, CELL - 4, CELL - 4);
+  ctx.strokeStyle = '#15803d';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(GOAL.x * CELL + 21, GOAL.y * CELL + 42);
+  ctx.lineTo(GOAL.x * CELL + 21, GOAL.y * CELL + 16);
+  ctx.stroke();
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.moveTo(GOAL.x * CELL + 23, GOAL.y * CELL + 16);
+  ctx.lineTo(GOAL.x * CELL + 44, GOAL.y * CELL + 22);
+  ctx.lineTo(GOAL.x * CELL + 23, GOAL.y * CELL + 28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#166534';
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('GOAL', GOAL.x * CELL + CELL/2, GOAL.y * CELL + 48);
+
+  // Path (학습된 정책 시도, 무작위 시도) - 파란색
+  if (path.length > 1) {
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.45)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < path.length; i++) {
+      const px = path[i].x * CELL + CELL/2;
+      const py = path[i].y * CELL + CELL/2;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // 마지막 학습 에피소드의 경로 - 주황색 (학습 중 진행 상황 보여주기용)
+  if (lastTrainingPath.length > 1) {
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < lastTrainingPath.length; i++) {
+      const px = lastTrainingPath[i].x * CELL + CELL/2;
+      const py = lastTrainingPath[i].y * CELL + CELL/2;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  if (lastHitCells.length > 0) {
+    const hitCounts = new Map();
+    lastHitCells.forEach(({x, y}) => {
+      const key = `${x},${y}`;
+      hitCounts.set(key, (hitCounts.get(key) || 0) + 1);
+    });
+
+    hitCounts.forEach((count, key) => {
+      const [x, y] = key.split(',').map(Number);
+      const cx = x * CELL + CELL/2;
+      const cy = y * CELL + CELL/2;
+      ctx.strokeStyle = 'rgba(220, 38, 38, 0.78)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - 11, cy - 11);
+      ctx.lineTo(cx + 11, cy + 11);
+      ctx.moveTo(cx + 11, cy - 11);
+      ctx.lineTo(cx - 11, cy + 11);
+      ctx.stroke();
+
+      if (count > 1) {
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(count, cx + 17, cy - 16);
+      }
+    });
+  }
+
+  // Agent
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.arc(agentPos.x * CELL + CELL/2, agentPos.y * CELL + CELL/2, CELL/3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function drawGraph() {
+  const w = graphCanvas.width;
+  const h = graphCanvas.height;
+  graphCtx.clearRect(0, 0, w, h);
+
+  if (rewardHistory.length < 2) {
+    graphCtx.fillStyle = '#9ca3af';
+    graphCtx.font = '14px 맑은 고딕';
+    graphCtx.textAlign = 'center';
+    graphCtx.textBaseline = 'middle';
+    graphCtx.fillText('학습을 시작하면 그래프가 그려집니다', w/2, h/2);
+    return;
+  }
+
+  const padding = { top: 20, right: 20, bottom: 36, left: 56 };
+  const plotW = w - padding.left - padding.right;
+  const plotH = h - padding.top - padding.bottom;
+
+  const minR = Math.min(...rewardHistory);
+  const maxR = Math.max(...rewardHistory);
+  const rangeR = (maxR - minR) || 1;
+
+  // Axes
+  graphCtx.strokeStyle = '#d1d5db';
+  graphCtx.lineWidth = 1;
+  graphCtx.beginPath();
+  graphCtx.moveTo(padding.left, padding.top);
+  graphCtx.lineTo(padding.left, padding.top + plotH);
+  graphCtx.lineTo(padding.left + plotW, padding.top + plotH);
+  graphCtx.stroke();
+
+  // Y grid + labels
+  graphCtx.fillStyle = '#6b7280';
+  graphCtx.font = '11px 맑은 고딕';
+  graphCtx.textAlign = 'right';
+  graphCtx.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) {
+    const val = minR + (rangeR * i / 4);
+    const y = padding.top + plotH - (plotH * i / 4);
+    graphCtx.fillText(val.toFixed(0), padding.left - 8, y);
+    graphCtx.strokeStyle = '#f3f4f6';
+    graphCtx.beginPath();
+    graphCtx.moveTo(padding.left, y);
+    graphCtx.lineTo(padding.left + plotW, y);
+    graphCtx.stroke();
+  }
+
+  // X axis label
+  graphCtx.fillStyle = '#6b7280';
+  graphCtx.textAlign = 'center';
+  graphCtx.textBaseline = 'bottom';
+  graphCtx.fillText('학습 횟수 (에피소드)', padding.left + plotW/2, h - 8);
+
+  graphCtx.save();
+  graphCtx.translate(14, padding.top + plotH/2);
+  graphCtx.rotate(-Math.PI/2);
+  graphCtx.fillText('보상', 0, 0);
+  graphCtx.restore();
+
+  // Raw data
+  graphCtx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+  for (let i = 0; i < rewardHistory.length; i++) {
+    const x = padding.left + (plotW * i / Math.max(rewardHistory.length - 1, 1));
+    const y = padding.top + plotH - (plotH * (rewardHistory[i] - minR) / rangeR);
+    graphCtx.beginPath();
+    graphCtx.arc(x, y, 2.5, 0, Math.PI*2);
+    graphCtx.fill();
+  }
+
+  // Rolling average
+  const windowSize = Math.min(10, Math.max(2, Math.floor(rewardHistory.length / 5)));
+  graphCtx.strokeStyle = '#1F3864';
+  graphCtx.lineWidth = 2.5;
+  graphCtx.beginPath();
+  let started = false;
+  for (let i = 0; i < rewardHistory.length; i++) {
+    if (i < windowSize - 1) continue;
+    let sum = 0;
+    for (let j = 0; j < windowSize; j++) sum += rewardHistory[i - j];
+    const avg = sum / windowSize;
+    const x = padding.left + (plotW * i / Math.max(rewardHistory.length - 1, 1));
+    const y = padding.top + plotH - (plotH * (avg - minR) / rangeR);
+    if (!started) { graphCtx.moveTo(x, y); started = true; }
+    else graphCtx.lineTo(x, y);
+  }
+  graphCtx.stroke();
+
+  // Legend
+  graphCtx.font = '11px 맑은 고딕';
+  graphCtx.textAlign = 'left';
+  graphCtx.textBaseline = 'middle';
+  graphCtx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+  graphCtx.beginPath();
+  graphCtx.arc(padding.left + 8, padding.top + 8, 3, 0, Math.PI*2);
+  graphCtx.fill();
+  graphCtx.fillStyle = '#6b7280';
+  graphCtx.fillText('매 에피소드 보상', padding.left + 16, padding.top + 8);
+
+  graphCtx.strokeStyle = '#1F3864';
+  graphCtx.lineWidth = 2.5;
+  graphCtx.beginPath();
+  graphCtx.moveTo(padding.left + 130, padding.top + 8);
+  graphCtx.lineTo(padding.left + 150, padding.top + 8);
+  graphCtx.stroke();
+  graphCtx.fillText('이동 평균 (학습 추세)', padding.left + 156, padding.top + 8);
+}
+
+// ============ 통계 ============
+
+function updateStats(lastRun) {
+  document.getElementById('stat-episodes').textContent = episodes;
+
+  if (lastRun) {
+    document.getElementById('stat-last-reward').textContent = lastRun.totalR.toFixed(1);
+    document.getElementById('stat-last-steps').textContent = lastRun.steps;
+    document.getElementById('stat-last-hits').textContent = lastRun.hits ?? 0;
+  }
+
+  if (rewardHistory.length >= 10) {
+    const recent = rewardHistory.slice(-10);
+    const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    document.getElementById('stat-avg-reward').textContent = avg.toFixed(1);
+  } else if (rewardHistory.length > 0) {
+    const avg = rewardHistory.reduce((a, b) => a + b, 0) / rewardHistory.length;
+    document.getElementById('stat-avg-reward').textContent = avg.toFixed(1) + ' (학습 中)';
+  }
+}
+
+// ============ 애니메이션 ============
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runEpisodeAnimated(epsilon) {
+  let x = START.x, y = START.y;
+  agentPos = {x, y};
+  path = [{x, y}];
+  lastTrainingPath = [];  // 시도 시 학습 경로(주황) 지우기
+  lastHitCells = [];
+  let totalR = 0;
+  let steps = 0;
+  let hits = 0;
+
+  setButtonsEnabled(false);
+  drawGrid();
+  await sleep(120);
+
+  for (let s = 0; s < 60; s++) {
+    const a = chooseAction(x, y, epsilon);
+    const { x: nx, y: ny, r, done, hit, hitCell } = step(x, y, a);
+
+    totalR += r;
+    if (hit) {
+      hits++;
+      lastHitCells.push(hitCell);
+    }
+    x = nx; y = ny;
+    agentPos = {x, y};
+    path.push({x, y});
+    steps++;
+
+    drawGrid();
+    await sleep(180);
+
+    if (done) break;
+  }
+
+  updateStats({ totalR, steps, hits });
+  setButtonsEnabled(true);
+}
+
+async function trainBatch(count) {
+  setButtonsEnabled(false);
+
+  // 학습 진행이 보이도록 페이싱 조절
+  // 10번: 천천히 (한 에피소드씩 충분히 보이게)
+  // 100번: 빠르지만 진화 과정이 보이게
+  let pauseTime;
+  if (count <= 10) pauseTime = 200;        // 10번 → 약 2초
+  else if (count <= 30) pauseTime = 80;    // 30번 → 약 2.4초
+  else pauseTime = 30;                      // 100번 → 약 3초
+
+  // 직전 시도(파란 경로)는 학습 중에는 가림
+  path = [];
+
+  for (let i = 0; i < count; i++) {
+    const result = trainEpisode();
+    lastTrainingPath = result.path;  // 주황색 학습 경로 업데이트
+    lastHitCells = result.hitCells;
+
+    drawGrid();
+    drawGraph();
+
+    // 진행 상황 통계 실시간 표시
+    document.getElementById('stat-episodes').textContent = episodes;
+    document.getElementById('stat-last-reward').textContent = result.totalR.toFixed(1);
+    document.getElementById('stat-last-steps').textContent = result.steps;
+    document.getElementById('stat-last-hits').textContent = result.hits;
+    if (rewardHistory.length >= 10) {
+      const recent = rewardHistory.slice(-10);
+      const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+      document.getElementById('stat-avg-reward').textContent = avg.toFixed(1);
+    } else {
+      const avg = rewardHistory.reduce((a, b) => a + b, 0) / rewardHistory.length;
+      document.getElementById('stat-avg-reward').textContent = avg.toFixed(1) + ' (학습 中)';
+    }
+
+    await sleep(pauseTime);
+  }
+
+  // 학습 종료 후에도 마지막 경로는 살짝 남겨서 결과 확인 가능
+  drawGrid();
+  drawGraph();
+  setButtonsEnabled(true);
+}
+
+function setButtonsEnabled(enabled) {
+  ['btn-random', 'btn-policy', 'btn-train-10', 'btn-train-100', 'btn-reset'].forEach(id => {
+    document.getElementById(id).disabled = !enabled;
+  });
+}
+
+// ============ 이벤트 ============
+
+document.getElementById('btn-random').addEventListener('click', () => {
+  runEpisodeAnimated(1.0);
+});
+document.getElementById('btn-policy').addEventListener('click', () => {
+  runEpisodeAnimated(0);
+});
+document.getElementById('btn-train-10').addEventListener('click', () => {
+  trainBatch(10);
+});
+document.getElementById('btn-train-100').addEventListener('click', () => {
+  trainBatch(100);
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  initQ();
+  episodes = 0;
+  rewardHistory = [];
+  agentPos = {...START};
+  path = [];
+  lastTrainingPath = [];
+  lastHitCells = [];
+  drawGrid();
+  drawGraph();
+  document.getElementById('stat-episodes').textContent = '0';
+  document.getElementById('stat-last-reward').textContent = '—';
+  document.getElementById('stat-last-steps').textContent = '—';
+  document.getElementById('stat-last-hits').textContent = '—';
+  document.getElementById('stat-avg-reward').textContent = '—';
+});
+
+// 기본값 정의
+const DEFAULT_REWARDS = { goal: 100, obstacle: -10, step: -1 };
+
+function updateSliderColor(elemId, currentValue, defaultValue) {
+  const el = document.getElementById(elemId);
+  if (Math.abs(currentValue - defaultValue) > 1e-6) {
+    el.style.color = '#dc2626';  // 변경됨: 빨간색
+  } else {
+    el.style.color = '#1F3864';  // 기본값: 본래 색
+  }
+}
+
+function formatReward(value) {
+  return (value > 0 ? '+' : '') + value;
+}
+
+document.getElementById('slider-goal').addEventListener('input', e => {
+  rewards.goal = parseInt(e.target.value);
+  document.getElementById('val-goal').textContent = formatReward(rewards.goal);
+  updateSliderColor('val-goal', rewards.goal, DEFAULT_REWARDS.goal);
+});
+document.getElementById('slider-wall').addEventListener('input', e => {
+  rewards.obstacle = parseInt(e.target.value);
+  document.getElementById('val-wall').textContent = formatReward(rewards.obstacle);
+  updateSliderColor('val-wall', rewards.obstacle, DEFAULT_REWARDS.obstacle);
+});
+document.getElementById('slider-step').addEventListener('input', e => {
+  rewards.step = parseFloat(e.target.value);
+  document.getElementById('val-step').textContent = formatReward(rewards.step);
+  updateSliderColor('val-step', rewards.step, DEFAULT_REWARDS.step);
+});
+
+// 보상 함수만 기본값으로 복원 (Q-테이블은 유지)
+document.getElementById('btn-restore-rewards').addEventListener('click', () => {
+  rewards.goal = DEFAULT_REWARDS.goal;
+  rewards.obstacle = DEFAULT_REWARDS.obstacle;
+  rewards.step = DEFAULT_REWARDS.step;
+
+  document.getElementById('slider-goal').value = DEFAULT_REWARDS.goal;
+  document.getElementById('slider-wall').value = DEFAULT_REWARDS.obstacle;
+  document.getElementById('slider-step').value = DEFAULT_REWARDS.step;
+
+  document.getElementById('val-goal').textContent = formatReward(DEFAULT_REWARDS.goal);
+  document.getElementById('val-wall').textContent = formatReward(DEFAULT_REWARDS.obstacle);
+  document.getElementById('val-step').textContent = formatReward(DEFAULT_REWARDS.step);
+
+  updateSliderColor('val-goal', DEFAULT_REWARDS.goal, DEFAULT_REWARDS.goal);
+  updateSliderColor('val-wall', DEFAULT_REWARDS.obstacle, DEFAULT_REWARDS.obstacle);
+  updateSliderColor('val-step', DEFAULT_REWARDS.step, DEFAULT_REWARDS.step);
+});
+
+window.addEventListener('resize', () => {
+  graphCanvas.width = graphCanvas.offsetWidth;
+  drawGraph();
+});
+
+// ============ 초기화 ============
+setupCanvas();
+initQ();
+drawGrid();
+drawGraph();
+</script>
+</body>
+</html>
