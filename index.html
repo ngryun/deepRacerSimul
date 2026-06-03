@@ -245,6 +245,48 @@
   @media (max-width: 880px) {
     .main { grid-template-columns: 1fr; }
   }
+
+  @media (max-width: 520px) {
+    body { padding: 12px; }
+    header { margin-bottom: 16px; }
+    h1 { font-size: 24px; line-height: 1.25; }
+    .subtitle { font-size: 13px; }
+    .intro-banner,
+    .grid-container,
+    .panel,
+    .graph-container,
+    .activities {
+      padding: 16px;
+    }
+    .intro-banner,
+    .main,
+    .graph-container {
+      margin-bottom: 16px;
+    }
+    .main { gap: 16px; }
+    .sidebar { gap: 12px; }
+    .grid-legend {
+      gap: 8px 12px;
+      font-size: 12px;
+    }
+    .btn {
+      min-height: 44px;
+      padding: 11px 12px;
+    }
+    .slider-group { margin-bottom: 16px; }
+    .slider { height: 8px; }
+    .slider::-webkit-slider-thumb {
+      width: 22px;
+      height: 22px;
+    }
+    .slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+    }
+    .warning { line-height: 1.55; }
+    .activities h2 { font-size: 17px; }
+    .activity-card { padding: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -718,7 +760,13 @@ function drawGraph() {
     return;
   }
 
-  const padding = { top: 20, right: 20, bottom: 36, left: 56 };
+  const compact = w < 360;
+  const padding = {
+    top: compact ? 46 : 20,
+    right: compact ? 12 : 20,
+    bottom: 36,
+    left: compact ? 44 : 56
+  };
   const plotW = w - padding.left - padding.right;
   const plotH = h - padding.top - padding.bottom;
 
@@ -792,23 +840,40 @@ function drawGraph() {
   graphCtx.stroke();
 
   // Legend
-  graphCtx.font = '11px 맑은 고딕';
+  graphCtx.font = compact ? '10px 맑은 고딕' : '11px 맑은 고딕';
   graphCtx.textAlign = 'left';
   graphCtx.textBaseline = 'middle';
-  graphCtx.fillStyle = 'rgba(59, 130, 246, 0.6)';
-  graphCtx.beginPath();
-  graphCtx.arc(padding.left + 8, padding.top + 8, 3, 0, Math.PI*2);
-  graphCtx.fill();
-  graphCtx.fillStyle = '#6b7280';
-  graphCtx.fillText('매 에피소드 보상', padding.left + 16, padding.top + 8);
+  if (compact) {
+    graphCtx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+    graphCtx.beginPath();
+    graphCtx.arc(padding.left + 4, 14, 3, 0, Math.PI*2);
+    graphCtx.fill();
+    graphCtx.fillStyle = '#6b7280';
+    graphCtx.fillText('매 에피소드 보상', padding.left + 12, 14);
 
-  graphCtx.strokeStyle = '#1F3864';
-  graphCtx.lineWidth = 2.5;
-  graphCtx.beginPath();
-  graphCtx.moveTo(padding.left + 130, padding.top + 8);
-  graphCtx.lineTo(padding.left + 150, padding.top + 8);
-  graphCtx.stroke();
-  graphCtx.fillText('이동 평균 (학습 추세)', padding.left + 156, padding.top + 8);
+    graphCtx.strokeStyle = '#1F3864';
+    graphCtx.lineWidth = 2.5;
+    graphCtx.beginPath();
+    graphCtx.moveTo(padding.left, 30);
+    graphCtx.lineTo(padding.left + 20, 30);
+    graphCtx.stroke();
+    graphCtx.fillText('이동 평균', padding.left + 26, 30);
+  } else {
+    graphCtx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+    graphCtx.beginPath();
+    graphCtx.arc(padding.left + 8, padding.top + 8, 3, 0, Math.PI*2);
+    graphCtx.fill();
+    graphCtx.fillStyle = '#6b7280';
+    graphCtx.fillText('매 에피소드 보상', padding.left + 16, padding.top + 8);
+
+    graphCtx.strokeStyle = '#1F3864';
+    graphCtx.lineWidth = 2.5;
+    graphCtx.beginPath();
+    graphCtx.moveTo(padding.left + 130, padding.top + 8);
+    graphCtx.lineTo(padding.left + 150, padding.top + 8);
+    graphCtx.stroke();
+    graphCtx.fillText('이동 평균 (학습 추세)', padding.left + 156, padding.top + 8);
+  }
 }
 
 // ============ 통계 ============
