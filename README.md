@@ -1,7 +1,10 @@
-# DeepRacer Reinforcement Learning Simulator
+# DeepRacer 강화학습 체험 시뮬레이터
 
-AWS DeepRacer 체험 수업에서 강화학습의 보상 함수와 Q-learning 흐름을 설명하기 위한 단일 페이지 웹 시뮬레이터입니다.
+AWS DeepRacer 체험 수업에서 강화학습의 원리와 보상 함수 설계를 설명하기 위한 단일 페이지 웹 시뮬레이터입니다. 두 단계가 탭으로 나뉘어 있습니다.
+
+- **1단계 · 격자 길찾기**: 8×8 격자에서 Q-learning으로 목표를 찾아가는 과정을 보여 줍니다. 목표·벽·걸음 보상을 바꿔 보상 해킹이나 보상 부호에 따른 행동 변화를 관찰합니다.
+- **2단계 · 트랙 주행**: 도로 중심선, 조향각, 속도, 진행률과 보상 함수의 관계를 보여 줍니다. 실제 DeepRacer 엔진을 재현하지는 않고, 학생이 `distance_from_center`, `steering_angle`, `speed`, `progress`, `is_offtrack` 같은 개념을 보상 함수와 연결해 이해하도록 단순화했습니다.
 
 ## 실행
 
-브라우저에서 `index.html`을 열면 바로 실행됩니다.
+브라우저에서 `index.html`을 열면 바로 실행됩니다. 주소 끝에 `#grid` 또는 `#track`을 붙이면 해당 탭으로 바로 열립니다.
